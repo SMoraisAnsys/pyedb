@@ -53,13 +53,13 @@ def find_runtime_config(dotnet_root: Path) -> Path:
 
 if is_linux:  # pragma: no cover
     from pythonnet import load
-    # Use default system runtime
+    # Use system DOTNET core runtime
     try:
         from clr_loader import get_coreclr
         runtime = get_coreclr()
         load(runtime)
         is_clr = True
-    # Define dotnet root and runtime config file to load 'coreclr'
+    # Define DOTNET root and runtime config file to load DOTNET core runtime
     except Exception:
         if os.environ.get("DOTNET_ROOT") is None:
             try:
@@ -73,8 +73,6 @@ if is_linux:  # pragma: no cover
 
                 dotnet_root = Path(dotnetcore2.__file__).parent / "bin"
                 runtime_config = pyedb_path / "misc" / "pyedb.runtimeconfig.json"
-            finally:
-                os.environ["DOTNET_ROOT"] = runtime
         else:
             dotnet_root = Path(os.environ["DOTNET_ROOT"])
             try:
@@ -82,8 +80,7 @@ if is_linux:  # pragma: no cover
             except Exception as e:
                 raise RuntimeError("Configuration file could not be found from DOTNET_ROOT. Please ensure that .NET SDK is correctly installed or that DOTNET_ROOT is correctly set.")
         try:
-            # json_file = os.path.abspath(os.path.join(pyedb_path, "misc", "pyedb.runtimeconfig.json"))
-            load("coreclr", runtime_config=runtime_config, dotnet_root=os.environ["DOTNET_ROOT"])
+            load("coreclr", runtime_config=str(runtime_config), dotnet_root=str(dotnet_root))
             print("DotNet Core correctly loaded.")
             if "mono" not in os.getenv("LD_LIBRARY_PATH", ""):
                 warnings.warn("LD_LIBRARY_PATH needs to be setup to use pyedb.")
